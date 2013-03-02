@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>opencc</title>
+</head>
+<body onload="pageDidLoad()">
+
+<h1>Native Client Module OpenCC</h1>
+<p>
+  <div id="listener">
+    <embed name="nacl_module"
+       id="opencc"
+       width=0 height=0
+       src="opencc.nmf"
+       type="application/x-nacl" />
+  </div>
+</p>
+
+<h2>Status</h2>
+<div id="status_field">NO-STATUS</div>
+
+<div>
+<input type="text" id="user_input">
+<button id="convert_button">Convert</button>
+</div>
+
+<h2>OpenCC</h2>
+<div id="converted_output"></div>
+
+<script type="text/javascript">
+OpenCCModule = null;
+statusText = 'NO-STATUS';
+
+function updateStatus(opt_message) {
+  statusText = opt_message;
+  var statusField = document.getElementById('status_field');
+  if (statusField) {
+    statusField.innerHTML = statusText;
+  }
+}
+
+function moduleDidLoad() {
+  OpenCCModule = document.getElementById('opencc');
+  updateStatus('SUCCESS');
+}
+
+function pageDidLoad() {
+  if (OpenCCModule == null) {
+    updateStatus('LOADING...');
+  } else {
+    updateStatus();
+  }
+}
+
+var postMessage = function (command, options, callback) {
+  options.command = command;
+  var message = JSON.stringify(options);
+  OpenCCModule.postMessage(message);
+}
+
+var userInput = document.getElementById('user_input');
+var convertedOutput = document.getElementById('converted_output');
+var convertButton = document.getElementById('convert_button');
+
+function handleMessage(message_event) {
+  var data = message_event.data;
+  var res = JSON.parse(data);
+  if (res.type === 'convert') {
+  	convertedOutput.innerHTML = res.text;
+  } else {
+	  console.log(res);
+	}
+}
+
+var listener = document.getElementById('listener');
+listener.addEventListener('load', moduleDidLoad, true);
+listener.addEventListener('message', handleMessage, true);
+
+convertButton.onclick = function (event) {
+  postMessage('convert', {
+    config: 'zhs2zht.ini',
+    text: userInput.text,
+  });
+}
+
+</script>
+
+</body>
+</html>
